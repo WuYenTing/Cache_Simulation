@@ -1,0 +1,63 @@
+Address bits: 8
+Block size: 4
+Cache sets: 4
+Associativity: 2
+
+Offset bit count: 2
+Indexing bit count: 2
+Indexing bits: 3 2 
+
+.benchmark testcase1
+01101100 miss
+00110000 miss
+00011000 miss
+01001100 miss
+10101100 miss
+00010000 miss
+01110000 miss
+00001100 miss
+00101100 miss
+10010000 miss
+01101100 miss
+00110000 miss
+00011000 hit
+01001100 miss
+10101100 miss
+01101100 miss
+00110000 hit
+00011000 hit
+01001100 miss
+10101100 miss
+00010000 miss
+01110000 miss
+00001100 miss
+00101100 miss
+10010000 miss
+01101100 miss
+00110000 miss
+00011000 hit
+01001100 miss
+01101100 hit
+00110000 hit
+00011000 hit
+01001100 hit
+10101100 miss
+00010000 miss
+01110000 miss
+00001100 miss
+00101100 miss
+10010000 miss
+10101100 miss
+00010000 miss
+01110000 miss
+00001100 miss
+00101100 miss
+10010000 miss
+00010000 miss
+01110000 miss
+00001100 hit
+00101100 hit
+10010000 miss
+.end
+
+Total cache miss count: 40
