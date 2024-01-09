@@ -28,13 +28,25 @@ vector<int> indexing_bit;
 vector<bool> indexing;
 
 ll str_to_int(string str){          //config reading
-    if(str.length()==0) return 0;
-    return ll(stoi(str));
+    //if(str.length()==0) return 0;
+    //return ll(stoi(str));
+    ll sum = 0,i = 0;
+    while (isdigit(str[i])) {
+        sum = sum * 10 + str[i] - '0';
+        i++;
+    }
+    return sum;
 }
 
 ll bin_to_int(string str){          //binary convert to int
-    if(str.length()==0) return 0;
-    return ll(stoi(str, 0, 2));
+    //if(str.length()==0) return 0;
+    //return ll(stoi(str, 0, 2));
+    ll sum = 0, i = 0;
+    while (isdigit(str[i])) {
+        sum = sum * 2 + str[i] - '0';
+        i++;
+    }
+    return sum;
 }
 
 ll int_to_log2(ll byte){            //int convert to binary length
@@ -42,7 +54,7 @@ ll int_to_log2(ll byte){            //int convert to binary length
 }
 
 struct Block{                       //block info: byte_addr, idx, tag, opt_idx, opt_tag
-    string addr;
+    string addr;                    //byte_addr
     string tag; 
     string idx;
     string opt_tag;
@@ -88,7 +100,7 @@ bool hit_or_miss(string tag, Set* set, string mode){
     //cout << tmp.size() << " here\n";
     sort(tmp.begin(), tmp.end()); 
     //cout << "sorted\n";
-    bool rslt = binary_search(tmp.begin(), tmp.end(), ll(stoi(tag, 0, 2)));
+    bool rslt = binary_search(tmp.begin(), tmp.end(), ll(bin_to_int(tag)));
     //if (rslt) 
     return rslt;
 }
@@ -166,8 +178,8 @@ bool same_bit(char A, char B){
     return A==B;
 }
 
-vector<bool> indexing_map(vector<int> indexing_bit, ll Address_bits, ll Block_size){
-    int num_of_indexing_bit = log2(Block_size);
+vector<bool> indexing_map(vector<int> indexing_bit, ll Address_bits, ll Cache_sets){
+    int num_of_indexing_bit = log2(Cache_sets);
     vector<bool> tmp(Address_bits, false);
     if (dbg) cout << "indexing_map\n";
     for(int i=0; i<num_of_indexing_bit ;i++){
@@ -182,44 +194,67 @@ vector<bool> indexing_map(vector<int> indexing_bit, ll Address_bits, ll Block_si
     return tmp;
 }
 
-string extract_idx(string block_addr, vector<bool> indexing, ll block_addr_bit){
+string extract_idx(string reversed_block_addr, vector<bool> indexing, ll block_addr_bit){
     int off_set = log2(Block_size);
-    reverse(block_addr.begin(), block_addr.end());
+    //reverse(block_addr.begin(), block_addr.end());
     string tmp;
     if (dbg) cout << "extract_idx ";
-    for(int i=off_set; i<off_set+block_addr_bit; i++){
+    /*for(int i=off_set; i<off_set+block_addr_bit; i++){
         if(indexing[i]){
             if (dbg) cout << i << " ";
-            tmp = tmp + block_addr[i];
+            tmp = tmp + reversed_block_addr[i-off_set];
+        }
+    }*/
+    for(int i=off_set+block_addr_bit-1; i>=off_set; i--){
+        if(indexing[i]){
+            if (dbg) cout << i << " ";                   //indexing : true, bits for indexing
+            tmp = tmp + reversed_block_addr[i-off_set];  //byte_address 0->off_set+block_addr_bit-1        //[0][1][2][3][4][5][6][7]
+            //cout << reversed_block_addr << "->";       //block_address offset->off_set+block_addr_bit-1  //[ ][ ][2][3][4][5][6][7]
         }
     }
     if (dbg) cout << ", ";
-    reverse(tmp.begin(), tmp.end());
+    //reverse(tmp.begin(), tmp.end());                   //for loop read in reverse to get tmp now tmp is same order as input
     return tmp;
 }
 
-string extract_tag(string block_addr, vector<bool> indexing, ll block_addr_bit){
+string extract_tag(string reversed_block_addr, vector<bool> indexing, ll block_addr_bit){
     int off_set = log2(Block_size);
-    reverse(block_addr.begin(), block_addr.end());
+    //reverse(block_addr.begin(), block_addr.end());
     string tmp;
     if (dbg) cout << "extract_tag ";
-    for(int i=off_set; i<off_set+block_addr_bit; i++){
+    /*for(int i=off_set; i<off_set+block_addr_bit; i++){
         if(!indexing[i]){
             if (dbg) cout << i << " ";
-            tmp = tmp + block_addr[i];
+            tmp = tmp + reversed_block_addr[i-off_set];
+        }
+    }*/
+    for(int i=off_set+block_addr_bit-1; i>=off_set; i--){
+        if(!indexing[i]){
+            if (dbg) cout << i << " ";                   //indexing : true, bits for indexing
+            tmp = tmp + reversed_block_addr[i-off_set];  //byte_address 0->off_set+block_addr_bit-1        //[0][1][2][3][4][5][6][7]
+            //cout << reversed_block_addr << "->";       //block_address offset->off_set+block_addr_bit-1  //[ ][ ][2][3][4][5][6][7]
         }
     }
     if (dbg) cout << "\n";
-    reverse(tmp.begin(), tmp.end());
+    //reverse(tmp.begin(), tmp.end());
     return tmp;
 }
 
 void block_opt_info(vector<reference> reference_Block, vector<bool> indexing, ll block_addr_bit){
     if (dbg) cout << "\nextrax_idx_tag\n";
-    for(auto i:reference_Block){
-        string addr = i.block->addr;
-        i.block->opt_idx = extract_idx(i.block->addr, indexing, block_addr_bit);
-        i.block->opt_tag = extract_tag(i.block->addr, indexing, block_addr_bit);
+    int ref_len=reference_Block.size();
+    vector<string> tmp_ref_block_addr;
+    for(auto i :reference_Block){
+        string tmp_block_addr = i.block->tag+i.block->idx;
+        reverse(tmp_block_addr.begin(), tmp_block_addr.end());
+        tmp_ref_block_addr.push_back(tmp_block_addr);
+    }
+    for(int i=0; i<ref_len; i++){
+        string reversed_block_addr = tmp_ref_block_addr[i];
+        //string reversed_block_addr = i.block->tag+i.block->idx;
+        //reverse(reversed_block_addr.begin(), reversed_block_addr.end());
+        reference_Block[i].block->opt_idx = extract_idx(reversed_block_addr, indexing, block_addr_bit);
+        reference_Block[i].block->opt_tag = extract_tag(reversed_block_addr, indexing, block_addr_bit);
     }
     if (dbg) cout << "\nblock_opt_info\n";
     for(auto i:reference_Block){
@@ -235,13 +270,20 @@ vector<vector<double>> Correlation(vector<reference> reference_Block, ll block_a
     int off_set = log2(Block_size); 
     if (dbg) cout << "last_addr_idx: " << last_addr_idx << "\n";
     vector<vector<double>> cor(Address_bits, vector<double> (Address_bits, 0));
+    vector<string> tmp_ref_block_addr;
+    for(auto i :reference_Block){
+        string tmp_block_addr = i.block->tag+i.block->idx;
+        reverse(tmp_block_addr.begin(), tmp_block_addr.end());
+        tmp_ref_block_addr.push_back(tmp_block_addr);
+    }
     for(int i=0; i<block_addr_bit-1; i++){
         for(int j=i+1; j<block_addr_bit; j++){
             double E=0, D=0, C=0;
             for(int k=0; k<ref_Block_len; k++){
-                string block_addr = reference_Block[k].block->tag + reference_Block[k].block->idx;
+                string block_addr = tmp_ref_block_addr[k];
+                //string block_addr = reference_Block[k].block->tag + reference_Block[k].block->idx;
                 //cout << block_addr << "->";
-                reverse(block_addr.begin(), block_addr.end());
+                //reverse(block_addr.begin(), block_addr.end());
                 //cout << block_addr << "\n";
                 if(same_bit(block_addr[i], block_addr[j])){
                     E++;
@@ -268,13 +310,20 @@ vector<vector<double>> Quality(vector<reference> reference_Block, ll block_addr_
     vector<bool> select(Address_bits, false);
     double Max_Q=0;
     int Max_Q_idx=0;
+    vector<string> tmp_ref_block_addr;
+    for(auto i :reference_Block){
+        string tmp_block_addr = i.block->tag+i.block->idx;
+        reverse(tmp_block_addr.begin(), tmp_block_addr.end());
+        tmp_ref_block_addr.push_back(tmp_block_addr);
+    }
     for(int i=0; i<block_addr_bit; i++){     
         if(i==0){            
             for(int j=0; j<block_addr_bit ; j++){
                 double Z=0, O=0;
                 for(int k=0; k<ref_Block_len; k++){
-                    string block_addr = reference_Block[k].block->tag + reference_Block[k].block->idx;                    
-                    reverse(block_addr.begin(), block_addr.end());
+                    string block_addr = tmp_ref_block_addr[k];
+                    //string block_addr = reference_Block[k].block->tag + reference_Block[k].block->idx;                    
+                    //reverse(block_addr.begin(), block_addr.end());
                     if(block_addr[j]=='1'){
                         O++;
                     }
@@ -435,13 +484,15 @@ int main(int argc, char *argv[]){
 
 //====================================== Correlation_&_Quality ======================================    
 
-    Cor = Correlation(reference_Block, block_addr_bit);
-    if (dbg) debug_cor(Cor);
-    Qua = Quality(reference_Block, block_addr_bit, Index_Set_bit, Cor);
-    if (dbg) debug_qua(Qua);
-    indexing = indexing_map(indexing_bit, Address_bits, Block_size);
-    block_opt_info(reference_Block, indexing, block_addr_bit); 
-    
+    if(mode == "opt"){
+        Cor = Correlation(reference_Block, block_addr_bit);
+        if (dbg) debug_cor(Cor);
+        Qua = Quality(reference_Block, block_addr_bit, Index_Set_bit, Cor);
+        if (dbg) debug_qua(Qua);
+        indexing = indexing_map(indexing_bit, Address_bits, Cache_sets);
+        block_opt_info(reference_Block, indexing, block_addr_bit); 
+    }
+
 //====================================== Cache_NRU_mode ======================================
 
     Cache* cache = Cache_initiate(Cache_sets, Associativity);
@@ -472,7 +523,7 @@ int main(int argc, char *argv[]){
             int index ;
             if(mode == "opt"){
                 //cout << "ref_ID : " << i.id << " opt_tag " << i.block->opt_tag << " opt_idx(set) " << stoi(i.block->opt_idx, 0, 2) << "\n";
-                index = stoi(i.block->opt_idx, 0, 2);
+                index = bin_to_int(i.block->opt_idx);
                 if (dbg) debug_NRU(cache->set[index]);
                 if (dbg) debug_cache(cache, Tag_bit, mode);
                 if (hit_or_miss(i.block->opt_tag, cache->set[index], mode) == true){       //hit
@@ -490,7 +541,7 @@ int main(int argc, char *argv[]){
             }
             else{
                 //cout << "ref_ID : " << i.id << " tag " << i.block->tag << " idx(set) " << stoi(i.block->idx, 0, 2) << "\n";
-                index = stoi(i.block->idx, 0, 2);
+                index = bin_to_int(i.block->idx);
                 if (dbg) debug_NRU(cache->set[index]);
                 if (dbg) debug_cache(cache, Tag_bit, mode);
                 if (hit_or_miss(i.block->tag, cache->set[index], mode) == true){       //hit
@@ -514,7 +565,7 @@ int main(int argc, char *argv[]){
             int index;
             if (mode == "opt"){
                 //cout << "ref_ID : " << i.id << " opt_tag " << i.block->opt_tag << " opt_idx(set) " << stoi(i.block->opt_idx, 0, 2) << "\n";
-                index = stoi(i.block->opt_idx, 0, 2);
+                index = bin_to_int(i.block->opt_idx);
                 if (dbg) debug_NRU(cache->set[index]);
                 if (dbg) debug_cache(cache, Tag_bit, mode);
                 if (hit_or_miss(i.block->opt_tag, cache->set[index], mode) == true){       //hit
@@ -533,7 +584,7 @@ int main(int argc, char *argv[]){
             }
             else{
                 //cout << "ref_ID : " << i.id << " tag " << i.block->tag << " idx(set) " << stoi(i.block->idx, 0, 2) << "\n";
-                index = stoi(i.block->idx, 0, 2);
+                index = bin_to_int(i.block->idx);
                 if (dbg) debug_NRU(cache->set[index]);
                 if (dbg) debug_cache(cache, Tag_bit, mode);
                 if (hit_or_miss(i.block->tag, cache->set[index], mode) == true){       //hit
