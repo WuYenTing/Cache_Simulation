@@ -15,7 +15,7 @@ using bit = int;
 //////////////////////////|                                                         |//////////////////////////
 //////////////////////////|/////////////////////////////////////////////////////////|//////////////////////////
 string config;
-string mode = "!opt";;
+string mode = "!opt";
 string f_mode = "!" + mode;
 bool dbg = false;
 ll Address_bits;
@@ -26,6 +26,7 @@ vector<vector<double>> Cor;
 vector<vector<double>> Qua;
 vector<int> indexing_bit;
 vector<bool> indexing;
+vector<string> tmp_rev_ref_block_addr;
 
 ll str_to_int(string str){          //config reading
     //if(str.length()==0) return 0;
@@ -236,7 +237,7 @@ string extract_tag(string reversed_block_addr, vector<bool> indexing, ll block_a
         }
     }
     if (dbg) cout << "\n";
-    //reverse(tmp.begin(), tmp.end());                     //for loop read in reverse to get tmp now tmp is same order as input
+    //reverse(tmp.begin(), tmp.end());                   //for loop read in reverse to get tmp now tmp is same order as input
     return tmp;
 }
 
@@ -270,17 +271,17 @@ vector<vector<double>> Correlation(vector<reference> reference_Block, ll block_a
     int off_set = log2(Block_size); 
     if (dbg) cout << "last_addr_idx: " << last_addr_idx << "\n";
     vector<vector<double>> cor(Address_bits, vector<double> (Address_bits, 0));
-    vector<string> tmp_ref_block_addr;
+    //vector<string> tmp_rev_ref_block_addr;
     for(auto i :reference_Block){
         string tmp_block_addr = i.block->tag+i.block->idx;
         reverse(tmp_block_addr.begin(), tmp_block_addr.end());
-        tmp_ref_block_addr.push_back(tmp_block_addr);
+        tmp_rev_ref_block_addr.push_back(tmp_block_addr);
     }
     for(int i=0; i<block_addr_bit-1; i++){
         for(int j=i+1; j<block_addr_bit; j++){
             double E=0, D=0, C=0;
             for(int k=0; k<ref_Block_len; k++){
-                string block_addr = reference_Block[k].block->tag + reference_Block[k].block->idx;
+                string block_addr = tmp_rev_ref_block_addr[k];
                 //string block_addr = reference_Block[k].block->tag + reference_Block[k].block->idx;
                 //cout << block_addr << "->";
                 //reverse(block_addr.begin(), block_addr.end());
@@ -310,18 +311,18 @@ vector<vector<double>> Quality(vector<reference> reference_Block, ll block_addr_
     vector<bool> select(Address_bits, false);
     double Max_Q=0;
     int Max_Q_idx=0;
-    vector<string> tmp_ref_block_addr;
+    /*vector<string> tmp_ref_block_addr;
     for(auto i :reference_Block){
         string tmp_block_addr = i.block->tag+i.block->idx;
         reverse(tmp_block_addr.begin(), tmp_block_addr.end());
         tmp_ref_block_addr.push_back(tmp_block_addr);
-    }
+    }*/
     for(int i=0; i<block_addr_bit; i++){     
         if(i==0){            
             for(int j=0; j<block_addr_bit ; j++){
                 double Z=0, O=0;
                 for(int k=0; k<ref_Block_len; k++){
-                    string block_addr = tmp_ref_block_addr[k];
+                    string block_addr = tmp_rev_ref_block_addr[k];
                     //string block_addr = reference_Block[k].block->tag + reference_Block[k].block->idx;                    
                     //reverse(block_addr.begin(), block_addr.end());
                     if(block_addr[j]=='1'){
