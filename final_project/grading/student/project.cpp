@@ -85,14 +85,17 @@ struct Cache{                       //cache info: set
 bool hit_or_miss(string tag, Set* set, string mode){
     if(tag.length()==0) return false;
     //cout << "hit/miss " << set->way.size() << " way/set\n"; 
-    vector<ll> tmp;
+    //vector<ll> tmp;
+    vector<string> tmp;
     for(auto i: set->way){
         if(!i->empty){
             if(mode == "opt"){
-                tmp.push_back(bin_to_int(i->block->opt_tag));
+                //tmp.push_back(bin_to_int(i->block->opt_tag));
+                tmp.push_back((i->block->opt_tag));
             }
             else{
-                tmp.push_back(bin_to_int(i->block->tag));
+                //tmp.push_back(bin_to_int(i->block->tag));
+                tmp.push_back((i->block->tag));
             }
             //cout << i->block->tag << ", ";
         }         
@@ -101,7 +104,11 @@ bool hit_or_miss(string tag, Set* set, string mode){
     //cout << tmp.size() << " here\n";
     sort(tmp.begin(), tmp.end()); 
     //cout << "sorted\n";
-    bool rslt = binary_search(tmp.begin(), tmp.end(), ll(bin_to_int(tag)));
+    //bool rslt = binary_search(tmp.begin(), tmp.end(), ll(bin_to_int(tag)));
+    //cout << ll(bin_to_int(tag)) << "\n";
+    //cout << tag << "\n";
+    //bool rslt = search_string(tmp, tag);
+    bool rslt = binary_search(tmp.begin(), tmp.end(), tag);
     //if (rslt) 
     return rslt;
 }
@@ -465,6 +472,9 @@ int main(int argc, char *argv[]){
     ll block_addr_bit = Address_bits - Offset_bit;
     ll num_ref = 0;
     cout << "\nTag_bit "<< Tag_bit << ", offset_bit(byte/block) " << Offset_bit << ", Index_Set_bit(set/cache) " << Index_Set_bit << "\n\n";
+    string testcase;
+    fin>>testcase;
+    fin>>testcase;
     while(getline(fin, ref_addr,'\n')){
 		if (fin.eof()){
 			break;
@@ -629,7 +639,7 @@ int main(int argc, char *argv[]){
         }       
     }
     fout << "\n\n";
-    fout << ".benchmark testcase1\n";
+    fout << ".benchmark " << testcase <<"\n";
     int miss = 0;
     for(auto i : reference_Block){
         fout << i.block->addr << " ";
